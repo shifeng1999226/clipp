@@ -50,27 +50,27 @@ constexpr LimitStop kHistoryMemoryStops[] = {
 };
 
 constexpr LimitStop kHistoryAgeStops[] = {
-    { 1, L"1 second" },
-    { 10, L"10 seconds" },
-    { 60, L"1 minute" },
-    { 10ull * 60ull, L"10 minutes" },
-    { 60ull * 60ull, L"1 hour" },
-    { 6ull * 60ull * 60ull, L"6 hours" },
-    { Settings::DefaultClipboardHistoryMaxAgeSeconds, L"1 day" },
-    { 7ull * 24ull * 60ull * 60ull, L"7 days" },
-    { 30ull * 24ull * 60ull * 60ull, L"30 days" },
+    { 1, L"1 秒" },
+    { 10, L"10 秒" },
+    { 60, L"1 分钟" },
+    { 10ull * 60ull, L"10 分钟" },
+    { 60ull * 60ull, L"1 小时" },
+    { 6ull * 60ull * 60ull, L"6 小时" },
+    { Settings::DefaultClipboardHistoryMaxAgeSeconds, L"1 天" },
+    { 7ull * 24ull * 60ull * 60ull, L"7 天" },
+    { 30ull * 24ull * 60ull * 60ull, L"30 天" },
     { Settings::UnlimitedClipboardHistoryLimit, CLP_W(CLP_UI_UNLIMITED) },
 };
 
 constexpr LimitStop kHistoryItemStops[] = {
-    { 1, L"1 item" },
-    { 10, L"10 items" },
-    { 50, L"50 items" },
-    { 100, L"100 items" },
-    { 500, L"500 items" },
-    { Settings::DefaultClipboardHistoryMaxItems, L"1000 items" },
-    { 5000, L"5000 items" },
-    { 10000, L"10000 items" },
+    { 1, L"1 条" },
+    { 10, L"10 条" },
+    { 50, L"50 条" },
+    { 100, L"100 条" },
+    { 500, L"500 条" },
+    { Settings::DefaultClipboardHistoryMaxItems, L"1000 条" },
+    { 5000, L"5000 条" },
+    { 10000, L"10000 条" },
     { Settings::UnlimitedClipboardHistoryLimit, CLP_W(CLP_UI_UNLIMITED) },
 };
 

@@ -231,7 +231,7 @@ public:
             DarkMode::DarkMessageBox(owner, createError_.c_str(), CLP_W(CLP_UI_APP_NAME), MB_ICONERROR | MB_OK);
             }
         } catch (const winrt::hresult_error& error) {
-            const std::wstring message = L"Unable to open the XAML Islands dialog. HRESULT: " + std::to_wstring(error.code());
+            const std::wstring message = L"无法打开 Clipp 窗口。HRESULT: " + std::to_wstring(error.code());
             g_logger.log(__FUNCTION__, Logger::Level::Error, message.c_str());
             DarkMode::DarkMessageBox(owner, message.c_str(), CLP_W(CLP_UI_APP_NAME), MB_ICONERROR | MB_OK);
         }
@@ -275,7 +275,7 @@ private:
             this);
 
         if (!hwnd_ && createError_.empty()) {
-            createError_ = L"Unable to create the Clipp dialog window.";
+            createError_ = L"无法创建 Clipp 窗口。";
         }
     }
 
@@ -289,7 +289,7 @@ private:
                 InitializeXamlIsland();
             }
             catch (const winrt::hresult_error& error) {
-                createError_ = L"Unable to open the XAML Islands dialog. This requires Windows 10 version 1903 or later and the WinRT XAML hosting runtime.\n\nHRESULT: " +
+                createError_ = L"无法打开 Clipp 窗口。需要 Windows 10 1903 或更新版本，以及 WinRT XAML 运行环境。\n\nHRESULT: " +
                     std::to_wstring(static_cast<uint32_t>(static_cast<int32_t>(error.code())));
                 g_logger.log(__FUNCTION__, Logger::Level::Error, createError_.c_str());
                 return -1;
@@ -484,7 +484,7 @@ private:
         sidebarActions.Padding(ThicknessHelper::FromLengths(8, 0, 8, 16));
         sidebarActions.Spacing(8);
 
-        Button minimizeButton = CreateSidebarButton(L"Minimize to Tray");
+        Button minimizeButton = CreateSidebarButton(L"关闭窗口，继续同步");
         minimizeButton.Click([this](auto const&, auto const&) {
             MinimizeToTray();
         });

@@ -246,9 +246,9 @@ static void UpdateTrayTooltip() {
             const std::wstring age = Utf8ToWideString(
                 clipp::FormatRelativeAgeUtf8(elapsed > 0 ? static_cast<uint64_t>(elapsed) : 0));
             if (g_flowDirection == clipp::ClipboardFlowDirection::Received) {
-                tip += L"\nReceived from " + g_flowPeerName + L" " + age;
+                tip += L"\n收到来自 " + g_flowPeerName + L" 的内容 · " + age;
             } else {
-                tip += L"\nSent " + age;
+                tip += L"\n已发送 · " + age;
             }
         }
     }
@@ -365,7 +365,7 @@ LRESULT CALLBACK TrayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
                     CLP_W(CLP_UI_TAGLINE) L"\n\n"
                     CLP_W(CLP_UI_COPYRIGHT) L"\n"
                     CLP_W(CLP_UI_MIT_LICENSE) L"\n\n"
-                    L"Uses open source libraries including libsodium, xxHash, Zstandard, C++/WinRT, and darkmode32plus.",
+                    L"使用 libsodium、xxHash、Zstandard、C++/WinRT 和 darkmode32plus 等开源组件。",
                     CLP_W(CLP_UI_ABOUT_CLIPP),
                     MB_ICONINFORMATION | MB_OK);
                 break;

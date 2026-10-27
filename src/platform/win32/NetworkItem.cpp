@@ -332,19 +332,19 @@ void NetworkItemView::RefreshConnectedFor(std::chrono::steady_clock::time_point 
     std::wstring text;
     switch (outgoingState_) {
     case PeerConnState::Connecting:
-        text = L"Connecting…";
+        text = L"正在连接…";
         break;
     case PeerConnState::Backoff:
-        text = L"Reconnecting…";
+        text = L"正在重新连接…";
         break;
     case PeerConnState::Failed:
-        text = L"Connection failed";
+        text = L"连接失败";
         break;
     case PeerConnState::Connected:
         text = FormatConnectedFor(connectedSince_, now);
         if (!hasIncoming_) {
             // Outgoing works; inbound doesn't — likely firewall/NAT on our side.
-            text += L"  ·  no inbound";
+            text += L"  ·  无法接收连接";
         }
         break;
     }
