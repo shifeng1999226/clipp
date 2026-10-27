@@ -19,11 +19,11 @@ void NotifyClipboardFlow(ClipboardFlowDirection direction, const std::string& pe
 }
 
 std::string FormatRelativeAgeUtf8(uint64_t ageSeconds) {
-    if (ageSeconds < 5)      return "just now";
-    if (ageSeconds < 60)     return std::to_string(ageSeconds) + "s ago";
-    if (ageSeconds < 3600)   return std::to_string(ageSeconds / 60) + "m ago";
-    if (ageSeconds < 86400)  return std::to_string(ageSeconds / 3600) + "h ago";
-    return std::to_string(ageSeconds / 86400) + "d ago";
+    if (ageSeconds < 5)      return "刚刚";
+    if (ageSeconds < 60)     return std::to_string(ageSeconds) + " 秒前";
+    if (ageSeconds < 3600)   return std::to_string(ageSeconds / 60) + " 分钟前";
+    if (ageSeconds < 86400)  return std::to_string(ageSeconds / 3600) + " 小时前";
+    return std::to_string(ageSeconds / 86400) + " 天前";
 }
 
 }  // namespace clipp
