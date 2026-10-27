@@ -2,6 +2,7 @@
 
 #include "../KeyManager.h"
 #include "../Logger.h"
+#include "../PeerDisplay.h"
 #include "../platform.h"
 #include "uistrings.h"
 
@@ -21,10 +22,59 @@
 #include <thread>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include <sodium.h>
 
 namespace uiClippPage {
+struct ConnectionSummary {
+    std::wstring title;
+    std::wstring detail;
+};
+
+inline ConnectionSummary SummarizeConnection(bool paired, const std::vector<PeerDisplayItem>& peers) {
+    if (!paired) {
+        return { CLP_W(CLP_UI_HOME_STATUS_PAIR), CLP_W(CLP_UI_HOME_HELP_PAIR) };
+    }
+
+    std::size_t connectedCount = 0;
+    std::wstring connectedName;
+    bool hasPartialConnection = false;
+    bool isConnecting = false;
+    for (const auto& peer : peers) {
+        const bool canSend = peer.outgoingConnState == PeerConnState::Connected;
+        const bool canReceive = peer.hasIncomingConnection;
+        if (canSend && canReceive) {
+            ++connectedCount;
+            connectedName = peer.hostName;
+        } else if (canSend || canReceive ||
+                   peer.outgoingConnState == PeerConnState::Backoff ||
+                   peer.outgoingConnState == PeerConnState::Failed) {
+            hasPartialConnection = true;
+        } else {
+            isConnecting = true;
+        }
+    }
+
+    if (hasPartialConnection) {
+        return { CLP_W(CLP_UI_HOME_STATUS_PARTIAL), CLP_W(CLP_UI_HOME_HELP_PARTIAL) };
+    }
+    if (connectedCount == 1) {
+        const std::wstring name = connectedName.empty()
+            ? CLP_W(CLP_UI_UNKNOWN_HOST) : connectedName;
+        return { std::wstring(CLP_W(CLP_UI_HOME_STATUS_CONNECTED_PREFIX)) + name,
+                 CLP_W(CLP_UI_HOME_HELP_CONNECTED) };
+    }
+    if (connectedCount > 1) {
+        return { std::to_wstring(connectedCount) + CLP_W(CLP_UI_HOME_STATUS_CONNECTED_COUNT),
+                 CLP_W(CLP_UI_HOME_HELP_CONNECTED) };
+    }
+    if (isConnecting) {
+        return { CLP_W(CLP_UI_HOME_STATUS_CONNECTING), CLP_W(CLP_UI_HOME_HELP_CONNECTING) };
+    }
+    return { CLP_W(CLP_UI_HOME_STATUS_WAITING), CLP_W(CLP_UI_HOME_HELP_WAITING) };
+}
+
 // Activity items whose masked private text the user has chosen to peek.
 // Process-wide (not page state) so the choice survives the page being torn
 // down and rebuilt with the window; item IDs are unique for the life of the
