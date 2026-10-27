@@ -245,14 +245,14 @@ std::wstring RelativeAgeText(std::chrono::system_clock::time_point when) {
     using namespace std::chrono;
     const auto now = system_clock::now();
     const long long secs = when <= now ? duration_cast<seconds>(now - when).count() : 0;
-    if (secs < 5)      return L"just now";
-    if (secs < 60)     return std::to_wstring(secs) + L" seconds ago";
-    if (secs < 120)    return L"a minute ago";
-    if (secs < 3600)   return std::to_wstring(secs / 60) + L" minutes ago";
-    if (secs < 7200)   return L"an hour ago";
-    if (secs < 86400)  return std::to_wstring(secs / 3600) + L" hours ago";
-    if (secs < 172800) return L"yesterday";
-    return std::to_wstring(secs / 86400) + L" days ago";
+    if (secs < 5)      return L"刚刚";
+    if (secs < 60)     return std::to_wstring(secs) + L" 秒前";
+    if (secs < 120)    return L"1 分钟前";
+    if (secs < 3600)   return std::to_wstring(secs / 60) + L" 分钟前";
+    if (secs < 7200)   return L"1 小时前";
+    if (secs < 86400)  return std::to_wstring(secs / 3600) + L" 小时前";
+    if (secs < 172800) return L"昨天";
+    return std::to_wstring(secs / 86400) + L" 天前";
 }
 
 // Register HLCs carry Unix wall-clock milliseconds.
@@ -2810,7 +2810,8 @@ private:
         swprintf(hex, 16, L"(U+%04X)", static_cast<unsigned>(error.codepoint));
         text += hex;
         text += CLP_W(CLP_UI_POPUP_TYPE_CANT_LINE) + std::to_wstring(error.line);
-        text += CLP_W(CLP_UI_POPUP_TYPE_CANT_COLUMN) + std::to_wstring(error.column);
+        text += CLP_W(CLP_UI_POPUP_TYPE_CANT_COLUMN) + std::to_wstring(error.column)
+            + CLP_W(CLP_UI_POPUP_TYPE_CANT_COLUMN_SUFFIX);
         const std::wstring layout = clipp::ActiveKeyboardLayoutName();
         if (!layout.empty()) {
             text += L" [" + layout + L"]";

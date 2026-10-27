@@ -3,6 +3,7 @@
 #include "Clipboard.h"
 #include "ClipboardActions.h"
 #include "KeyManager.h"
+#include "PeerDisplay.h"
 #include "PopupHotkeys.h"
 #include "Settings.h"
 #include "platform/uiClippPage.h"
@@ -50,6 +51,7 @@
 #include "XamlImage.h"
 
 extern KeyManager g_keyManager;
+extern PeerDisplay g_peerDisplay;
 
 namespace {
 namespace Automation = winrt::Windows::UI::Xaml::Automation;
@@ -163,26 +165,94 @@ void ClippPage::BuildView() {
     root_.HorizontalAlignment(HorizontalAlignment::Stretch);
     root_.VerticalAlignment(VerticalAlignment::Stretch);
 
-    // Row 0: the teach-the-hotkey banner (auto height, collapses away).
-    // Row 1: the activity stream.
+    // Connection status stays visible above the activity stream.
+    RowDefinition statusRow;
+    statusRow.Height(GridLength{ 1, GridUnitType::Auto });
     RowDefinition bannerRow;
     bannerRow.Height(GridLength{ 1, GridUnitType::Auto });
     RowDefinition contentRow;
     contentRow.Height(GridLength{ 1, GridUnitType::Star });
+    root_.RowDefinitions().Append(statusRow);
     root_.RowDefinitions().Append(bannerRow);
     root_.RowDefinitions().Append(contentRow);
 
+    Border statusCard;
+    statusCard.Margin(ThicknessHelper::FromLengths(24, 16, 24, 0));
+    statusCard.Padding(ThicknessHelper::FromLengths(16, 12, 16, 12));
+    statusCard.CornerRadius(CornerRadiusHelper::FromUniformRadius(10));
+    statusCard.Background(MakeBrush(28, 127, 127, 127));
+    Grid statusContent;
+    ColumnDefinition textColumn;
+    textColumn.Width(GridLength{ 1, GridUnitType::Star });
+    ColumnDefinition actionColumn;
+    actionColumn.Width(GridLength{ 1, GridUnitType::Auto });
+    statusContent.ColumnDefinitions().Append(textColumn);
+    statusContent.ColumnDefinitions().Append(actionColumn);
+    StackPanel statusText;
+    statusText.Spacing(5);
+    connectionTitle_ = TextBlock();
+    connectionTitle_.FontSize(17);
+    connectionTitle_.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
+    connectionTitle_.TextWrapping(TextWrapping::Wrap);
+    connectionDetail_ = TextBlock();
+    connectionDetail_.FontSize(12);
+    connectionDetail_.Opacity(0.7);
+    connectionDetail_.TextWrapping(TextWrapping::Wrap);
+    statusText.Children().Append(connectionTitle_);
+    statusText.Children().Append(connectionDetail_);
+    Grid::SetColumn(statusText, 0);
+    statusContent.Children().Append(statusText);
+    Button connectionButton;
+    connectionButton.Content(winrt::box_value(winrt::hstring{ CLP_W(CLP_UI_HOME_CONNECTION_SETTINGS) }));
+    connectionButton.Margin(ThicknessHelper::FromLengths(12, 0, 0, 0));
+    connectionButton.VerticalAlignment(VerticalAlignment::Center);
+    connectionButton.Click([this](auto const&, auto const&) {
+        if (showNetworkPage_) {
+            showNetworkPage_();
+        }
+    });
+    Grid::SetColumn(connectionButton, 1);
+    statusContent.Children().Append(connectionButton);
+    statusCard.Child(statusContent);
+    Grid::SetRow(statusCard, 0);
+    root_.Children().Append(statusCard);
+
     auto banner = BuildTeachBanner();
-    Grid::SetRow(banner, 0);
+    Grid::SetRow(banner, 1);
     root_.Children().Append(banner);
 
     auto section = BuildActivitySection();
-    Grid::SetRow(section, 1);
+    Grid::SetRow(section, 2);
     root_.Children().Append(section);
 
     uiDispatcher_ = winrt::Windows::System::DispatcherQueue::GetForCurrentThread();
+    UpdateConnectionSummary();
     UpdateTeachBanner();
     RefreshActivityItems(activityStore_.Snapshot());
+}
+
+void ClippPage::UpdateConnectionSummary() {
+    const auto summary = uiClippPage::SummarizeConnection(
+        g_keyManager.HaveNetworkKey(), g_peerDisplay.Query());
+    connectionTitle_.Text(winrt::hstring{ summary.title });
+    connectionDetail_.Text(winrt::hstring{ summary.detail });
+}
+
+void ClippPage::StartConnectionTimer() {
+    if (!connectionTimer_) {
+        connectionTimer_ = winrt::Windows::UI::Xaml::DispatcherTimer();
+        connectionTimer_.Interval(std::chrono::seconds(1));
+        connectionTimer_.Tick([this](auto const&, auto const&) {
+            UpdateConnectionSummary();
+        });
+    }
+    connectionTimer_.Start();
+}
+
+void ClippPage::StopConnectionTimer() {
+    if (connectionTimer_) {
+        connectionTimer_.Stop();
+    }
 }
 
 // The teach-the-hotkey banner: dismissible-forever nudge naming the popup
@@ -927,6 +997,8 @@ void ClippPage::CopyActivityItem(uint64_t itemID) {
 
 void ClippPage::OnShown() {
     BeginActivityNotifications();
+    UpdateConnectionSummary();
+    StartConnectionTimer();
     if (uiDispatcher_) {
         uiDispatcher_.TryEnqueue([this]() {
             UpdateTeachBanner();
@@ -937,6 +1009,7 @@ void ClippPage::OnShown() {
 }
 
 void ClippPage::OnHidden() {
+    StopConnectionTimer();
     EndActivityNotifications();
 }
 
@@ -952,11 +1025,15 @@ void ClippPage::OnDestroy() {
     activityEmptyNetworkButton_ = nullptr;
     teachBanner_ = nullptr;
     teachBannerText_ = nullptr;
+    connectionTitle_ = nullptr;
+    connectionDetail_ = nullptr;
+    connectionTimer_ = nullptr;
 }
 
 void ClippPage::OnNetworkKeyChanged() {
     if (uiDispatcher_) {
         uiDispatcher_.TryEnqueue([this]() {
+            UpdateConnectionSummary();
             UpdateActivityEmptyState();
         });
     }
