@@ -32,6 +32,9 @@ private:
     void BuildView();
     winrt::Windows::UI::Xaml::Controls::Border BuildTeachBanner();
     void UpdateTeachBanner();
+    void UpdateConnectionSummary();
+    void StartConnectionTimer();
+    void StopConnectionTimer();
     winrt::Windows::UI::Xaml::Controls::Grid BuildActivitySection();
     winrt::Windows::UI::Xaml::Controls::Grid BuildActivityRow(uint64_t itemID);
 
@@ -63,6 +66,9 @@ private:
     winrt::Windows::UI::Xaml::Controls::Grid root_{ nullptr };
     winrt::Windows::UI::Xaml::Controls::Border teachBanner_{ nullptr };
     winrt::Windows::UI::Xaml::Controls::TextBlock teachBannerText_{ nullptr };
+    winrt::Windows::UI::Xaml::Controls::TextBlock connectionTitle_{ nullptr };
+    winrt::Windows::UI::Xaml::Controls::TextBlock connectionDetail_{ nullptr };
+    winrt::Windows::UI::Xaml::DispatcherTimer connectionTimer_{ nullptr };
     winrt::Windows::UI::Xaml::Controls::ScrollViewer activityScroll_{ nullptr };
     winrt::Windows::UI::Xaml::Controls::StackPanel activityItemsPanel_{ nullptr };
     winrt::Windows::UI::Xaml::Controls::StackPanel activityEmptyState_{ nullptr };
