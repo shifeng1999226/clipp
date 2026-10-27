@@ -1,0 +1,85 @@
+name: Windows Chinese portable build
+
+on:
+  push:
+    branches:
+      - zh-windows-build
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg-cache,readwrite
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Read vcpkg baseline
+        id: vcpkg-baseline
+        run: |
+          $manifest = Get-Content -Raw src\vcpkg.json | ConvertFrom-Json
+          $baseline = $manifest.'builtin-baseline'
+          if (-not $baseline) {
+            throw 'src\vcpkg.json must define builtin-baseline.'
+          }
+          "ref=$baseline" >> $env:GITHUB_OUTPUT
+
+      - name: Set short vcpkg path
+        run: |
+          $drive = [System.IO.Path]::GetPathRoot($env:GITHUB_WORKSPACE)
+          $root = Join-Path $drive 'v'
+          New-Item -ItemType Directory -Path $root | Out-Null
+          "VCPKG_ROOT=$root" >> $env:GITHUB_ENV
+
+      - name: Install vcpkg
+        run: |
+          git clone --no-tags https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+          git -C $env:VCPKG_ROOT checkout --detach '${{ steps.vcpkg-baseline.outputs.ref }}'
+          & (Join-Path $env:VCPKG_ROOT 'bootstrap-vcpkg.bat') -disableMetrics
+
+      - name: Prepare dependency cache
+        run: New-Item -ItemType Directory -Force vcpkg-cache | Out-Null
+
+      - name: Restore dependency cache
+        uses: actions/cache/restore@v5
+        with:
+          path: vcpkg-cache
+          key: windows-amd64-vcpkg-${{ hashFiles('src/vcpkg.json', 'src/vcpkg-triplets/**') }}-zh-${{ github.run_id }}
+          restore-keys: |
+            windows-amd64-vcpkg-${{ hashFiles('src/vcpkg.json', 'src/vcpkg-triplets/**') }}-
+
+      - name: Build unsigned portable app
+        run: .\scripts\build_windows.ps1 -BuildType Release -Triplet x64-windows-static -VcVarsArch amd64 -DisableCodeSigning -SkipUiAccessStamp
+
+      - name: Verify executable
+        run: |
+          if (-not (Test-Path 'build\windows-release\clipp.exe')) {
+            throw 'Windows executable was not produced.'
+          }
+
+      - name: Upload Chinese Windows app
+        uses: actions/upload-artifact@v4
+        with:
+          name: clipp-windows-amd64-zh
+          path: |
+            build/windows-release/clipp.exe
+            LICENSE.md
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Save dependency cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: vcpkg-cache
+          key: windows-amd64-vcpkg-${{ hashFiles('src/vcpkg.json', 'src/vcpkg-triplets/**') }}-zh-${{ github.run_id }}
